@@ -58,6 +58,3 @@ dependencies {
     implementation("androidx.camera:camera-lifecycle:${cameraVersion}")
     implementation("androidx.camera:camera-view:${cameraVersion}")
 
-    implementation("com.quickbirdstudios:opencv-android:4.5.3.0")
-}
-
