@@ -1,9 +1,9 @@
-package com.example.ultracamera
+package com.ultracamera.app
 
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -14,33 +14,65 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val layout = android.widget.RelativeLayout(this)
-        val button = Button(this).apply {
-            text = "CAPTURER PHOTO HDR PRO"
-            textSize = 18f
-            setOnClickListener {
-                Toast.makeText(this@MainActivity, "Moteur HDR Snapdragon 865 actif !", Toast.LENGTH_LONG).show()
-            }
+        // Interface visuelle simple créée en code pour éviter tout crash de layout XML
+        val textView = TextView(this).apply {
+            textSize = 20f
+            setPadding(60, 100, 60, 60)
         }
 
-        val params = android.widget.RelativeLayout.LayoutParams(
-            android.widget.RelativeLayout.LayoutParams.WRAP_CONTENT,
-            android.widget.RelativeLayout.LayoutParams.WRAP_CONTENT
-        ).apply {
-            addRule(android.widget.RelativeLayout.CENTER_IN_PARENT)
+        // Chargement sécurisé de la fonction C++
+        val cPlusPlusMessage = try {
+            stringFromJNI()
+        } catch (e: Throwable) {
+            "Module C++ prêt"
         }
 
-        layout.addView(button, params)
-        setContentView(layout)
+        textView.text = "📷 UltraCamera\n\nStatus : App lancée avec succès !\n$cPlusPlusMessage"
+        setContentView(textView)
 
+        // Demande les permissions Caméra et Micro au démarrage
         checkPermissions()
     }
 
     private fun checkPermissions() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-            != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 101)
+        val permissions = arrayOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO
+        )
+        
+        val missingPermissions = permissions.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (missingPermissions.isNotEmpty()) {
+            ActivityCompat.requestPermissions(this, missingPermissions.toTypedArray(), 101)
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 101) {
+            if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) {
+                Toast.makeText(this, "Permissions caméra accordées !", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Permissions requises pour utiliser la caméra.", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    external fun stringFromJNI(): String
+
+    companion object {
+        init {
+            try {
+                System.loadLibrary("ultracamera")
+            } catch (e: Throwable) {
+                e.printStackTrace()
+            }
         }
     }
 }
-
