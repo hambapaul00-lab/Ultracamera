@@ -22,6 +22,10 @@ jobs:
     - name: Configuration du SDK Android
       uses: android-actions/setup-android@v3
 
+    - name: Installation du NDK Android et CMake
+      run: |
+        echo y | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;25.2.9519653" "cmake;3.22.1"
+
     - name: Téléchargement automatique du SDK OpenCV C++
       run: |
         mkdir -p app/src/main/cpp/opencv
@@ -30,7 +34,7 @@ jobs:
         cp -r OpenCV-android-sdk/sdk app/src/main/cpp/opencv/
 
     - name: Génération du Gradle Wrapper
-      run: gradle wrapper
+      run: gradle wrapper --gradle-version 8.2
 
     - name: Compilation de l'APK Android (NDK + C++)
       run: ./gradlew assembleDebug --stacktrace
